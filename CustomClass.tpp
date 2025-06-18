@@ -20,6 +20,9 @@ template<typename T>
 CustomQueue<T>::CustomQueue(size_t maxSize){
     this->maxSize = maxSize;
     size = 0;
+    head = nullptr;
+    tail = nullptr;
+    counter = 0;
 }
 
 template<typename T>
@@ -53,28 +56,45 @@ void CustomQueue<T>::execPush(T data){
 template<typename T>
 void CustomQueue<T>::push(T data , int timeout){
 
+    unique_lock<mutex> lock(push_pop_mtx);
+
+    counter++;
+
     bool tempIsEmpty = isEmpty();
 
-    if(isFull()){
-        cout << "Queue overflow!" << endl;
-        semPush.acquire();
+    auto start = chrono::steady_clock::now();
+    while(isFull()){
+        //cout << "Queue overflow!" << endl;
+        lock.unlock();
+        if(timeout > 0){
+            while (isFull()) {
+                if (chrono::steady_clock::now() - start >= chrono::milliseconds(timeout)) {
+                    if(tempIsEmpty){
+                        semPop.release();
+                    }
+                    return;
+                }
+            }
+        }else{
+            semPush.acquire();   
+        }
+        lock.lock();
     }
-    
+
     if(timeout == 0){
         execPush(data);
     }else{
-        auto pushWithTimeout = std::async(std::launch::async, &CustomQueue<T>::execPush , this , data);
-        if (pushWithTimeout.wait_for(std::chrono::seconds(timeout)) == std::future_status::ready) {
-            std::cout << "Push: " << data << " ########### " << endl;
-        } else {
-            std::cout << "Timeout occurred!" << endl;
-        }
+        if (chrono::steady_clock::now() - start <= chrono::milliseconds(timeout)) {
+            execPush(data);
+        } 
     }
 
     if(tempIsEmpty){
         semPop.release();
     }
     
+    lock.unlock();
+
 }
 
 template<typename T>
@@ -102,36 +122,53 @@ T CustomQueue<T>::execPop(){
 template<typename T>
 T CustomQueue<T>::pop(int timeout){
 
+    unique_lock<mutex> lock(push_pop_mtx);
+    T result = -1;    
+    counter++;
+
     bool tempIsFull = isFull();
 
-    if(isEmpty()){
-        cout << "Queue underflow" << endl;
-        semPop.acquire();
+    auto start = chrono::steady_clock::now();
+    while(isEmpty()){
+        // cout << "Queue underflow" << endl;
+        lock.unlock();
+        if(timeout > 0){
+            while (isEmpty()) {
+                if (chrono::steady_clock::now() - start >= chrono::milliseconds(timeout)) {
+                    if(tempIsFull){
+                        semPush.release();
+                    }
+                    return -1;
+                }
+            }
+        }else{
+            semPop.acquire();
+        }
+        lock.lock();
     }
 
     if(timeout == 0){
-        return execPop();
+        result = execPop();
     }else{
-        auto popWithTimeout = std::async(std::launch::async, &CustomQueue<T>::execPop , this);
-        if (popWithTimeout.wait_for(std::chrono::seconds(timeout)) == std::future_status::ready) {
-            return popWithTimeout.get();
-        } else {
-            std::cout << "Timeout occurred!" << endl;
-        }        
+        if (chrono::steady_clock::now() - start < chrono::milliseconds(timeout)) {
+            result = execPop();
+        }         
     }
 
     if(tempIsFull){
         semPush.release();
     }
 
-    return -1;
+    lock.unlock();
+
+    return result;
 }
 
 template<typename T>
 T CustomQueue<T>::peek(){
 
     if(isEmpty()){
-        cout << "Queue is empty" << endl;
+        // cout << "Queue is empty" << endl;
         return -1;
     }
 
@@ -141,4 +178,9 @@ T CustomQueue<T>::peek(){
 template<typename T>
 size_t CustomQueue<T>::getSize(){
     return size;
+}
+
+template<typename T>
+int CustomQueue<T>::getCounter(){
+    return counter;
 }

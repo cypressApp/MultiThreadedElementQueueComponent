@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <semaphore>
+#include <mutex>
 
 std::counting_semaphore<1> semPush(0);
 std::counting_semaphore<1> semPop(0);
@@ -26,6 +27,9 @@ class CustomQueue{
     QueueElement<T> *tail;
     size_t size;
     size_t maxSize;
+    std::mutex push_pop_mtx;
+    int counter;
+    
 
 public:
 
@@ -38,6 +42,7 @@ public:
     T pop(int timeout = 0);
     T peek();
     size_t getSize();
+    int getCounter();
     
 };
 

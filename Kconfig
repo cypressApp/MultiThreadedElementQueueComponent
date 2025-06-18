@@ -1,0 +1,13 @@
+menu "Timeout Configuration"
+
+config PUSH_TIMEOUT
+    int "Timeout in milliseconds"
+    default 1000
+
+
+config POP_TIMEOUT
+    int "Timeout in milliseconds"
+    default 1000
+
+
+endmenu
