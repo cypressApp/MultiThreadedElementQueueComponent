@@ -24,14 +24,14 @@ With `timeout > 0`, it waits up to the specified time and returns if unsuccessfu
 
 ### Popping Elements:
 ```
-int value = queue.pop();    // Pop immediately (blocks if empty)
+int value = queue.pop();     // Pop immediately (blocks if empty)
 int value = queue.pop(500);  // Pop with 500 ms timeout
 ```
 If the queue is empty:
 
 With `timeout = 0`, it blocks until an element is available.
 
-With `timeout > 0`, it waits up to the specified time, returns -1 if nothing is available.
+With `timeout > 0`, it waits up to the specified time, `returns -1` if nothing is available.
 
 ### Other Utilities:
 ```
