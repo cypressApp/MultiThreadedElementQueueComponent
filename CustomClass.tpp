@@ -165,17 +165,6 @@ T CustomQueue<T>::pop(int timeout){
 }
 
 template<typename T>
-T CustomQueue<T>::peek(){
-
-    if(isEmpty()){
-        // cout << "Queue is empty" << endl;
-        return -1;
-    }
-
-    return head->data;
-}
-
-template<typename T>
 size_t CustomQueue<T>::getSize(){
     return size;
 }
