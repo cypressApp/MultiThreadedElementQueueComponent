@@ -9,14 +9,14 @@ template <typename T>
 void pushThread(CustomQueue<T>& customQueue){
     for(int i = 0 ; i < 1000000 ; i++){
    //     this_thread::sleep_for(chrono::seconds(2));
-        customQueue.push(i , 1);// (i + 1) * 10 , 1);
+        customQueue.push(i , 0);// (i + 1) * 10 , 1);
     }
 }
 
 template <typename T>
 void popThread(CustomQueue<T>& customQueue){
     for(int i = 0 ; i < 1000000 ; i++){
-        int temp = customQueue.pop(2);
+        int temp = customQueue.pop(0);
        // cout << "pop: " << temp << endl;
     }
 }
