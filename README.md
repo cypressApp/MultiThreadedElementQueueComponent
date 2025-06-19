@@ -45,7 +45,7 @@ ctest --verbose
 ```
 ### Dependencies
 C++20 or later
-
+ and 
 GoogleTest (for testing)
 
 ### Project Structure:

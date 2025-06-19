@@ -65,12 +65,12 @@ class CustomQueue{
     /**
      * @brief mutex to handle syncronzation and safe access to the queue without any race condition
      */
-    std::mutex push_pop_mtx;
+    std::timed_mutex push_pop_tmtx;
 
     /**
      * @brief function call counter which is helpful to check if any race condition has been happened
      */
-    int counter;
+    std::atomic<int> counter;
     
 public:
 

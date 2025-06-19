@@ -9,15 +9,14 @@ template <typename T>
 void pushThread(CustomQueue<T>& customQueue){
     for(int i = 0 ; i < 1000000 ; i++){
    //     this_thread::sleep_for(chrono::seconds(2));
-        customQueue.push(i , 0);// (i + 1) * 10 , 1);
+        customQueue.push(i , 0);
     }
 }
 
 template <typename T>
 void popThread(CustomQueue<T>& customQueue){
     for(int i = 0 ; i < 1000000 ; i++){
-        int temp = customQueue.pop(0);
-       // cout << "pop: " << temp << endl;
+        int temp = customQueue.pop(1);
     }
 }
 
@@ -32,6 +31,8 @@ void displaySizeThread(CustomQueue<T>& customQueue){
 int main(){
 
     size_t maxQueueCapacity = 4000000;
+    // size_t pushTimeout = 1;
+    // size_t popTimeout = 1;
 
     // cout << "Max queue capacity: ";
     // cin >> maxQueueCapacity;
