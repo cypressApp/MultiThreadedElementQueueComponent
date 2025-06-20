@@ -4,6 +4,7 @@
 #include <iostream>
 #include <semaphore>
 #include <mutex>
+#include <optional>
 
 std::counting_semaphore<1> semPush(0);
 std::counting_semaphore<1> semPop(0);
@@ -53,7 +54,7 @@ class CustomQueue{
     /**
      * @brief current size of queue
      */
-    size_t size;
+    std::atomic<size_t> size;
 
 
     /**
@@ -73,6 +74,9 @@ class CustomQueue{
     std::atomic<int> counter;
     
 public:
+
+    static const int OP_SUCCESS = 0;
+    static const int OP_FAIL = 1;
 
     CustomQueue(size_t maxSize = 5);
     
@@ -104,7 +108,7 @@ public:
      * @param timeout(ms) if it is non-zero, enqueue operation should be done within the timeout duration
      * 
      */
-    void push(T data , int timeout = 0);
+    int push(T data , int timeout = 0);
     
 
     /**
@@ -128,7 +132,7 @@ public:
      * @return the content of the oldest element
      * 
      */
-    T pop(int timeout = 0);
+    std::optional<T> pop(int timeout = 0);
 
 
     /**

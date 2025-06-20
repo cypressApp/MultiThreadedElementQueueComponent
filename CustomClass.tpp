@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <optional>
 #include "CustomClass.hpp"
 
 using namespace std;
@@ -53,7 +54,7 @@ void CustomQueue<T>::execPush(T data){
 }
 
 template<typename T>
-void CustomQueue<T>::push(T data , int timeout){
+int CustomQueue<T>::push(T data , int timeout){
 
     auto start = chrono::steady_clock::now();
 
@@ -61,13 +62,11 @@ void CustomQueue<T>::push(T data , int timeout){
 
     if(timeout > 0){
         if (!push_pop_tmtx.try_lock_for(chrono::milliseconds(timeout))) {
-            return;
+            return CustomQueue<T>::OP_FAIL;
         }
     }else{
         push_pop_tmtx.lock();
     }
-
-    
 
     bool tempIsEmpty = isEmpty();
 
@@ -80,7 +79,7 @@ void CustomQueue<T>::push(T data , int timeout){
                     if(tempIsEmpty){
                         semPop.release();
                     }
-                    return;
+                    return CustomQueue<T>::OP_FAIL;
                 }
             }
         }else{
@@ -94,6 +93,13 @@ void CustomQueue<T>::push(T data , int timeout){
     }else{
         if (chrono::steady_clock::now() - start <= chrono::milliseconds(timeout)) {
             execPush(data);
+        }else{
+            if(tempIsEmpty){
+                semPop.release();
+            }
+    
+            push_pop_tmtx.unlock();
+            return CustomQueue<T>::OP_FAIL;
         } 
     }
 
@@ -102,6 +108,8 @@ void CustomQueue<T>::push(T data , int timeout){
     }
     
     push_pop_tmtx.unlock();
+
+    return CustomQueue::OP_SUCCESS;
 
 }
 
@@ -128,7 +136,7 @@ T CustomQueue<T>::execPop(){
 }
 
 template<typename T>
-T CustomQueue<T>::pop(int timeout){
+optional<T> CustomQueue<T>::pop(int timeout){
 
     auto start = chrono::steady_clock::now();
 
@@ -136,14 +144,14 @@ T CustomQueue<T>::pop(int timeout){
 
     if(timeout > 0){
         if (!push_pop_tmtx.try_lock_for(chrono::milliseconds(timeout))) {
-            return -1;
+            return nullopt;
         }
     }else{
         push_pop_tmtx.lock();
     }
 
     
-    T result = -1;    
+    optional<T> result = nullopt;    
     
     bool tempIsFull = isFull();
 
@@ -157,7 +165,7 @@ T CustomQueue<T>::pop(int timeout){
                     if(tempIsFull){
                         semPush.release();
                     }
-                    return -1;
+                    return result;
                 }
             }
         }else{

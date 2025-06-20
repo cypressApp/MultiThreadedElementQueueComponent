@@ -6,17 +6,23 @@ using namespace std;
 using namespace std::chrono;
 using namespace std::this_thread;
 
+size_t failPushCounter = 0;
+size_t failPopCounter = 0;
+
 template <typename T>
 void pushThread(CustomQueue<T>& customQueue){
     for(int i = 0 ; i < 1000000 ; i++){
-        customQueue.push(i , 1);
+        int result = customQueue.push(i , 1);
+        if(result) failPushCounter++;
     }
 }
 
 template <typename T>
 void popThread(CustomQueue<T>& customQueue){
+
     for(int i = 0 ; i < 1000000 ; i++){
-        int temp = customQueue.pop(0);
+        optional<T> temp = customQueue.pop(0);
+        if(temp == nullopt) failPopCounter++;
     }
 }
 

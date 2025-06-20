@@ -1,30 +1,44 @@
 #include <iostream>
 #include <thread>
+#include <iomanip>
 #include "CustomClass.hpp"
 #include "autoconf.h"
 
 using namespace std;
 
+size_t failPushCounter = 0;
+size_t failPopCounter = 0;
+
 template <typename T>
 void pushThread(CustomQueue<T>& customQueue){
+    failPushCounter = 0;
     for(int i = 0 ; i < 1000000 ; i++){
    //     this_thread::sleep_for(chrono::seconds(2));
-        customQueue.push(i , 0);
+        int result = customQueue.push(i , 1);
+        if(result == CustomQueue<T>::OP_FAIL) failPushCounter++;
     }
 }
 
 template <typename T>
 void popThread(CustomQueue<T>& customQueue){
+    failPopCounter = 0;
     for(int i = 0 ; i < 1000000 ; i++){
-        int temp = customQueue.pop(1);
+        optional<T> temp = customQueue.pop(1);
+        if(temp == nullopt) failPopCounter++;
     }
 }
 
 template <typename T>
 void displaySizeThread(CustomQueue<T>& customQueue){
-    while(1){
+    size_t displayCounter = 0;
+    while(displayCounter++ < 8){
         this_thread::sleep_for(chrono::milliseconds(500));
-        cout << "counter = " << customQueue.getCounter() << " , size = " << customQueue.getSize() << endl;  
+        cout << left
+             << setw(20) << "counter = " + to_string(customQueue.getCounter())
+             << setw(20) << "size = " + to_string(customQueue.getSize())
+             << setw(20) << "push fail = " + to_string(failPushCounter)
+             << setw(20) << "pop fail = " + to_string(failPopCounter)
+             << endl; 
     }
 }
 
