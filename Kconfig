@@ -1,13 +1,17 @@
-menu "Timeout Configuration"
+menu "Queue Configuration"
+
+config QUEUE_MAX_CAPIBILITY
+    int "Queue maximum capibility"
+    default 5
 
 config PUSH_TIMEOUT
     int "Timeout in milliseconds"
-    default 1000
+    default 10
 
 
 config POP_TIMEOUT
     int "Timeout in milliseconds"
-    default 1000
+    default 10
 
 
 endmenu

@@ -1,8 +1,11 @@
 #include <iostream>
 #include <thread>
+#include <chrono>
 #include <iomanip>
+#include <regex>
 #include "CustomClass.hpp"
 #include "autoconf.h"
+#include <limits>
 
 using namespace std;
 
@@ -10,59 +13,112 @@ size_t failPushCounter = 0;
 size_t failPopCounter = 0;
 
 template <typename T>
-void pushThread(CustomQueue<T>& customQueue){
-    failPushCounter = 0;
-    for(int i = 0 ; i < 1000000 ; i++){
-   //     this_thread::sleep_for(chrono::seconds(2));
-        int result = customQueue.push(i , 1);
-        if(result == CustomQueue<T>::OP_FAIL) failPushCounter++;
+void pushThread(CustomQueue<T>& customQueue , T newData , int timeout){
+    int result = customQueue.push(newData , timeout);
+    if(result == CustomQueue<T>::OP_FAIL) {
+        failPushCounter++;
+    }else{
+        cout << "\033[32m" << "push: " << newData << "\033[0m" << endl;
     }
 }
 
 template <typename T>
-void popThread(CustomQueue<T>& customQueue){
-    failPopCounter = 0;
-    for(int i = 0 ; i < 1000000 ; i++){
-        optional<T> temp = customQueue.pop(1);
-        if(temp == nullopt) failPopCounter++;
-    }
+optional<T> popThread(CustomQueue<T>& customQueue , int timeout){
+    optional<T> temp = customQueue.pop(timeout);
+    if(temp == nullopt) failPopCounter++;
+    return temp;
 }
 
 template <typename T>
 void displaySizeThread(CustomQueue<T>& customQueue){
-    size_t displayCounter = 0;
-    while(displayCounter++ < 8){
-        this_thread::sleep_for(chrono::milliseconds(500));
-        cout << left
-             << setw(20) << "counter = " + to_string(customQueue.getCounter())
-             << setw(20) << "size = " + to_string(customQueue.getSize())
-             << setw(20) << "push fail = " + to_string(failPushCounter)
-             << setw(20) << "pop fail = " + to_string(failPopCounter)
-             << endl; 
+    cout << "\033[36m"  << "size: " + to_string(customQueue.getSize()) << "\033[0m" << endl;
+}
+
+template<typename T>
+T getInput(string msg, T defaultValue){
+
+    T temp = defaultValue;
+
+    string input;
+    bool validInput = false;
+
+    do {
+        cout << msg << " (" << temp << "): ";
+        getline(cin, input);
+
+        if (input.empty()) {
+            validInput = true;
+        } else {
+            istringstream iss(input);
+            if (iss >> temp && iss.eof()) {
+                validInput = true;
+            } else {
+                cout << "\033[31m" << "Invalid format" << "\033[0m" << endl;
+                temp = defaultValue;
+            }
+        }
+
+    } while (!validInput);
+
+    return temp;
+}
+
+optional<int> getPushValue(string command){
+    
+    regex pattern(R"(push\((\d+)\))");
+    smatch match;
+
+    if (regex_match(command, match, pattern)) {
+        int value = stoi(match[1].str());
+        return value;
+    } else {
+        cout << "\033[31m" << "Invalid format" << "\033[0m" << endl;
+        return nullopt;
     }
 }
 
 int main(){
 
-    size_t maxQueueCapacity = 4000000;
-    // size_t pushTimeout = 1;
-    // size_t popTimeout = 1;
+    size_t maxQueueCapacity = CONFIG_QUEUE_MAX_CAPIBILITY;
+    int pushTimeout = CONFIG_PUSH_TIMEOUT;
+    int popTimeout = CONFIG_POP_TIMEOUT;
 
-    // cout << "Max queue capacity: ";
-    // cin >> maxQueueCapacity;
+    maxQueueCapacity = getInput<size_t>("Queue maxumim capacity" , CONFIG_QUEUE_MAX_CAPIBILITY);
+    pushTimeout = getInput<size_t>("Push timeout (ms)" , CONFIG_PUSH_TIMEOUT);
+    popTimeout = getInput<size_t>("Pop timeout (ms)" , CONFIG_POP_TIMEOUT);
 
     CustomQueue<int> customQueue(maxQueueCapacity);
-    
-    thread t1([&](){ pushThread(customQueue); });
-    thread t2([&](){ popThread(customQueue); });
-    thread t3([&](){ displaySizeThread(customQueue); });
+    optional<int> pushCmd;
+    string command;
 
-    // thread t1(&CustomQueue<int>::push, &customQueue , 10 , 1);
-    // t1.join();
+    while(1){
+        
+        this_thread::sleep_for(chrono::milliseconds(10));
+        cout << "> ";
+        cin >> command;
 
-    t1.join();
-    t2.join();    
-    t3.join();
+        if(command == "pop()"){
+            thread t1([&](){ 
+                optional<int> temp =  popThread(customQueue , popTimeout);
+                if(temp.has_value()){
+                    cout << "\033[34m" << "pop: " << temp.value() << "\033[0m"  << endl; 
+                }
+            });
+            t1.detach();
+            continue;
+        }else if(command == "size"){
+            thread t1([&](){ displaySizeThread(customQueue); });
+            t1.detach();
+            continue;
+        }
+
+        pushCmd = getPushValue(command);
+        if(pushCmd.has_value()){
+            thread t1([&](){ 
+                pushThread(customQueue , pushCmd.value() , pushTimeout); });
+            t1.detach();
+        }
+    }
 
     return 0;
 }   

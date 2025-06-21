@@ -54,7 +54,7 @@ void CustomQueue<T>::execPush(T data){
 }
 
 template<typename T>
-int CustomQueue<T>::push(T data , int timeout){
+int CustomQueue<T>::push(T data , int timeout, bool showWarning){
 
     auto start = chrono::steady_clock::now();
 
@@ -70,8 +70,12 @@ int CustomQueue<T>::push(T data , int timeout){
 
     bool tempIsEmpty = isEmpty();
 
+    
     while(isFull()){
-        //cout << "Queue overflow!" << endl;
+        if(showWarning) {
+            cout << "\033[33m" << "Queue overflow!" << "\033[0m" << endl;
+            showWarning = false;
+        }
         push_pop_tmtx.unlock();
         if(timeout > 0){
             while (isFull()) {
@@ -136,7 +140,7 @@ T CustomQueue<T>::execPop(){
 }
 
 template<typename T>
-optional<T> CustomQueue<T>::pop(int timeout){
+optional<T> CustomQueue<T>::pop(int timeout, bool showWarning){
 
     auto start = chrono::steady_clock::now();
 
@@ -154,10 +158,12 @@ optional<T> CustomQueue<T>::pop(int timeout){
     optional<T> result = nullopt;    
     
     bool tempIsFull = isFull();
-
     
     while(isEmpty()){
-        // cout << "Queue underflow" << endl;
+        if(showWarning) {
+            cout << "\033[33m" << "Queue underflow" << "\033[0m" << endl;
+            showWarning = false;
+        }
         push_pop_tmtx.unlock();
         if(timeout > 0){
             while (isEmpty()) {
@@ -199,4 +205,9 @@ size_t CustomQueue<T>::getSize(){
 template<typename T>
 int CustomQueue<T>::getCounter(){
     return counter;
+}
+
+template<typename T>
+size_t CustomQueue<T>::getMaxQueueCapacity(){
+    return maxSize;
 }

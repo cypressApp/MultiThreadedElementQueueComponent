@@ -1,7 +1,0 @@
-
-#
-# Timeout Configuration
-#
-CONFIG_PUSH_TIMEOUT=1000
-CONFIG_POP_TIMEOUT=1000
-# end of Timeout Configuration

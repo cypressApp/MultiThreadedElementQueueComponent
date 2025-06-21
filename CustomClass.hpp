@@ -108,7 +108,7 @@ public:
      * @param timeout(ms) if it is non-zero, enqueue operation should be done within the timeout duration
      * 
      */
-    int push(T data , int timeout = 0);
+    int push(T data , int timeout = 0, bool showWarning = true);
     
 
     /**
@@ -132,7 +132,7 @@ public:
      * @return the content of the oldest element
      * 
      */
-    std::optional<T> pop(int timeout = 0);
+    std::optional<T> pop(int timeout = 0, bool showWarning = true);
 
 
     /**
@@ -162,6 +162,12 @@ public:
      */
     int getCounter();
     
+    /**
+     * @brief get maximum queue capacity
+     * 
+     */
+    size_t getMaxQueueCapacity();
+
 };
 
 #include "CustomClass.tpp"
