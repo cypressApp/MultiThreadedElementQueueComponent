@@ -2,10 +2,10 @@
 
 ### Features:
 
-Thread-safe push and pop
-Optional timeout for push and pop operations
-Blocking behavior when full/empty and `timeout = 0`
-Bounded queue with maximum size
+Thread-safe push and pop.<br>
+Optional timeout for push and pop operations.<br> 
+Blocking behavior when full/empty and `timeout = 0`.<br>  
+Bounded queue with maximum size.<br>  
 
 ### Initialization:
 ```
@@ -44,8 +44,7 @@ Tests are located in the `tests/` directory and use GoogleTest. Run tests with:
 ctest --verbose
 ```
 ### Dependencies
-C++20 or later
- and 
+C++20 or later  
 GoogleTest (for testing)
 
 ### Project Structure:
