@@ -4,7 +4,7 @@
 
 Thread-safe push and pop
 Optional timeout for push and pop operations
-Blocking behavior when full/empty and timeout = 0
+Blocking behavior when full/empty and `timeout = 0`
 Bounded queue with maximum size
 
 ### Initialization:
